@@ -21,3 +21,20 @@ satlight
     forced to refresh the index:
     
         psql -U postgres -p 5439 mint -c "delete from ci_rhn_channels"    
+
+
+    The capsules directory has a structure such as ...
+        
+        [root@devimage fakesat]# find capsules -type d
+        capsules
+        capsules/systems
+        capsules/systems/RHN
+        capsules/packages
+        capsules/packages/rhel-x86_64-server-6
+        capsules/packages/rhel-i386-server-optional-6
+        capsules/packages/rhel-i386-server-6
+        capsules/packages/rhel-x86_64-server-optional-6    
+
+    Each subdirectory under capsules/packages is the name of a channel in satellite.
+    Only copy rpms to those directories, otherwise the code will try to pull rpm
+    headers from non-rpm files.    
