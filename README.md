@@ -14,3 +14,9 @@
         --output /var/log/satellite.log \
         --pidfile /var/satellite/satellite.pid \
         --datadir /var/satellite/  
+
+
+    Each time you add new rpms to the directory, capsule-indexer must be
+    forced to refresh the index:
+    
+        psql -U postgres -p 5439 mint -c "delete from ci_rhn_channels"    
