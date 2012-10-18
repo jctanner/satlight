@@ -1,4 +1,5 @@
-h3. satlight 
+satlight 
+=============
 
     An implementation of rhn-satellite to provide all
     xmlrpc and http repsonses required by an rpath rbuilder.
