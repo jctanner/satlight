@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# chkconfig: 345 81 19
+# description: Starts the Satellite Daemon
+#
+
+# Source function library.
+
+. /etc/init.d/functions
+
+SATPATH="/root/fakesat/satellite.py"
+PKIPATH="/root/fakesat/certs"
+CAPSULEPATH="/root/fakesat/capsules/packages"
+OUTPUT="/var/log/satellite.log"
+PIDFILE="/var/satellite/satellite.pid"
+DATADIR="/var/satellite/"
+
+start() {
+    mkdir -p $DATADIR
+    echo -n $"Starting Satellite: "
+    python $SATPATH --pki-path $PKIPATH --capsule-path $CAPSULEPATH --output $OUTPUT --pidfile $PIDFILE --datadir $DATADIR
+    RETVAL=$?
+    [ $RETVAL = 0 ] && success || failure
+    echo
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Shutting down Satellite: "
+    kill `cat $PIDFILE`
+    RETVAL=$?
+    [ $RETVAL = 0 ] && success || failure
+    echo
+    return $RETVAL
+}
+
+status() {
+    echo -n $"Satellite is: "
+    ps -p `cat "$PIDFILE"` >/dev/null 2>&1 && echo "running" || echo "not running"
+}
+
+restart() {
+    stop
+    start
+}
+
+
+RETVAL=0
+
+# See how we were called.
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart|reload)
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|restart|status}"
+        exit 1
+esac
+
+exit $?
