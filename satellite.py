@@ -1,23 +1,10 @@
-#!/usr/bin/python
+## {{{ http://code.activestate.com/recipes/496786/ (r1)
+"""SecureXMLRPCServer.py - simple XML RPC server supporting SSL.
 
-'''
-"satlight" 
+Based on this article: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/81549
 
-    An implementation of rhn-satellite to provide all
-    xmlrpc and http repsonses required by an rpath rbuilder.
-
-    xmlrpc server code derived from: 
-        http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/81549
-
-    To run:
-    
-    python /root/fakesat/satellite.py \
-        --pki-path /root/fakesat/certs \
-        --capsule-path /root/fakesat/capsules/packages \
-        --output /var/log/satellite.log \
-        --pidfile /var/satellite/satellite.pid \
-        --datadir /var/satellite/    
-'''
+For windows users: http://webcleaner.sourceforge.net/pyOpenSSL-0.6.win32-py2.4.exe
+"""
 
 import socket, os, sys
 # Configure below
@@ -55,6 +42,7 @@ import optparse
 from collections import namedtuple
 
 class SecureXMLRPCServer(BaseHTTPServer.HTTPServer, SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
+    #request_queue_size = 256
     def __init__(self, server_address, HandlerClass, logRequests=True):
         """Secure XML-RPC server.
 
@@ -124,8 +112,8 @@ class SecureXMLRpcRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler, 
             # SimpleXMLRPCDispatcher. To maintain backwards compatibility,
             # check to see if a subclass implements _dispatch and dispatch
             # using that method if present.
-            print "###### request XML"
-            print str(data)
+            #print "###### request XML"
+            #print str(data)
             response = self.server._marshaled_dispatch(
                     data, getattr(self, '_dispatch', None)
                 )
@@ -140,8 +128,8 @@ class SecureXMLRpcRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler, 
             self.send_header("Content-length", str(len(response)))
             self.end_headers()
             self.wfile.write(response)
-            print "###### response XML"
-            print response
+            #print "###### response XML"
+            #print response
 
             # shut down the connection
             self.wfile.flush()
@@ -179,10 +167,18 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
             return "blah"
 
     class ChannelSoftware:
+        def __init__(self):
+            self.packages = {}
+
         def availableEntitlements(self, sessionid, channel):
             return "999"
 
-        def listAllPackages(self, sessionid, channelname):
+	def listAllPackages(self,sessionid, channelname):
+            if self.packages.get(channelname) is None:
+                self.packages[channelname] = self._listAllPackages(sessionid, channelname)
+            return self.packages[channelname]
+
+        def _listAllPackages(self, sessionid, channelname):
             '''
             Method: listAllPackages
 
@@ -225,9 +221,9 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
                 # get the inode number to use a packageid
                 osdata = os.fstat(fdno) 
                 #import epdb; epdb.st()
-                print osdata
+                # print osdata
                 packageid = int(osdata.st_ino)
-                print packageid
+                # print packageid
                 os.close(fdno)
 
                 # get the sha1sum
@@ -247,7 +243,7 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
                                 'checksum_type':str('sha1'), 
                                 'arch_label':str(hdr['arch']), 
                                 'last_modified_date':str(hdr['buildtime'])  }
-                print teststruct
+                # print teststruct
                 packagelist.append(teststruct)
 
             #return ['one', 'two', 'three', 'four']
