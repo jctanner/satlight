@@ -21,6 +21,10 @@ satlight
     forced to refresh the index:
     
         psql -U postgres -p 5439 mint -c "delete from ci_rhn_channels"    
+        
+    If new packages are added to the directory, restart the satellite to
+    clear the package cache. The first request for listAllPackages will
+    be slow, but all future requests will be instantaneous.
 
 
     The capsules directory has a structure such as ...
