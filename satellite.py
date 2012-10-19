@@ -344,8 +344,10 @@ def test(basePath = None, pkiPath = None, dataDir = None, verbose = False, Handl
             # assemble special list of channels
             subscribedchannels = unpickled_data[systemid]
             channellist = []
+            timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
             for channel in subscribedchannels:
-                channellist.append([channel, '20121012161227', '1', '1'])
+                #channellist.append([channel, '20121012161227', '1', '1'])
+                channellist.append([channel, str(timestamp), '1', '1'])
 
             returndict = {  'X-RHN-Server-Id': systemid,
                             'X-RHN-Auth-Server-Time': '1350358803.4',
