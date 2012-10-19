@@ -1,10 +1,14 @@
-## {{{ http://code.activestate.com/recipes/496786/ (r1)
-"""SecureXMLRPCServer.py - simple XML RPC server supporting SSL.
+#!/usr/bin/python
 
-Based on this article: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/81549
+'''
+"satlight"
 
-For windows users: http://webcleaner.sourceforge.net/pyOpenSSL-0.6.win32-py2.4.exe
-"""
+An implementation of rhn-satellite to provide all
+xmlrpc and http repsonses required by an rpath rbuilder.
+
+xmlrpc server code derived from:
+http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/81549
+'''
 
 import socket, os, sys
 # Configure below
@@ -112,8 +116,8 @@ class SecureXMLRpcRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler, 
             # SimpleXMLRPCDispatcher. To maintain backwards compatibility,
             # check to see if a subclass implements _dispatch and dispatch
             # using that method if present.
-            #print "###### request XML"
-            #print str(data)
+            print "###### request XML ######"
+            print str(data)
             response = self.server._marshaled_dispatch(
                     data, getattr(self, '_dispatch', None)
                 )
@@ -128,14 +132,14 @@ class SecureXMLRpcRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler, 
             self.send_header("Content-length", str(len(response)))
             self.end_headers()
             self.wfile.write(response)
-            #print "###### response XML"
-            #print response
+            print "###### response XML ######"
+            print response
 
             # shut down the connection
             self.wfile.flush()
             self.connection.shutdown() # Modified here!
     
-def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureXMLRpcRequestHandler,ServerClass = SecureXMLRPCServer):
+def test(basePath = None, pkiPath = None, dataDir = None, verbose = False, HandlerClass = SecureXMLRpcRequestHandler,ServerClass = SecureXMLRPCServer):
     """Test xml rpc over https server"""
 
     if basePath is None:    
@@ -173,7 +177,7 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
         def availableEntitlements(self, sessionid, channel):
             return "999"
 
-	def listAllPackages(self,sessionid, channelname):
+        def listAllPackages(self,sessionid, channelname):
             if self.packages.get(channelname) is None:
                 self.packages[channelname] = self._listAllPackages(sessionid, channelname)
             return self.packages[channelname]
@@ -208,7 +212,7 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
             # http://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/RPM_Guide/ch16s04.html
             path = os.path.join(basePath, str(channelname))
             dirList=os.listdir(path)
-            #print dirList
+            if verbose: print dirList
             packagelist = []
             #ts = rpm.ts()   #  transaction set
             ts = rpm.TransactionSet()   #  transaction set
@@ -221,9 +225,9 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
                 # get the inode number to use a packageid
                 osdata = os.fstat(fdno) 
                 #import epdb; epdb.st()
-                # print osdata
+                #if verbose: print osdata
                 packageid = int(osdata.st_ino)
-                # print packageid
+                if verbose:  print packageid
                 os.close(fdno)
 
                 # get the sha1sum
@@ -243,7 +247,7 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
                                 'checksum_type':str('sha1'), 
                                 'arch_label':str(hdr['arch']), 
                                 'last_modified_date':str(hdr['buildtime'])  }
-                # print teststruct
+                if verbose: print teststruct
                 packagelist.append(teststruct)
 
             #return ['one', 'two', 'three', 'four']
@@ -268,7 +272,7 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
             # this should return a true systemid (1023165033)            
 
             #import epdb; epdb.st() 
-            print indata
+            if verbose: print indata
             '''
             (Epdb) indata
             {'username': 'fakename', 'password': 'fakepass', 
@@ -349,11 +353,13 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
                             'X-RHN-Auth-Channels': channellist,
                             'X-RHN-Auth-User-Id': '',
                             'X-RHN-Auth-Expire-Offset': '3600.0' }
+
+            if verbose: print returndict
             return returndict
 
         def subscribeChannels(self, systemid, channellist, username, password):
 
-            print channellist
+            if verbose: print channellist
 
             #f = open('capsules/systems/RHN/systemid-rhel-x86_64-server-6.auth', 'r')
             #data = f.read()
@@ -392,6 +398,7 @@ def test(basePath = None, pkiPath = None, dataDir = None, HandlerClass = SecureX
                             'X-RHN-Auth-Channels': channellist,
                             'X-RHN-Auth-User-Id': '',
                             'X-RHN-Auth-Expire-Offset': '3600.0' }
+            if verbose: print returndict
             return returndict
 
     class Get:
@@ -500,6 +507,7 @@ if __name__ == '__main__':
     parser.add_option("-o", "--output", dest = "output", default = os.devnull, help = "Output logs to FILE", metavar = "FILE")
     parser.add_option("-p", "--pidfile", dest = "pidfile", help = "Store pid in FILE", metavar = "FILE")
     parser.add_option("-d", "--datadir", dest = "dataDir", help = "Where to store system data")
+    parser.add_option("-v", "--verbose", dest = "verbose", action = "store_true", default = False, help = "set debug on")
     (options, args) = parser.parse_args()
     if options.daemonize:
         if not (options.pidfile and options.output):
@@ -508,7 +516,7 @@ if __name__ == '__main__':
         daemonize(options.output, options.pidfile)
     print "starting HTTP server"
     sys.stdout.flush()
-    test(options.capsulePath, options.pkiPath, options.dataDir)
+    test(options.capsulePath, options.pkiPath, options.dataDir, options.verbose)
 
 
 
