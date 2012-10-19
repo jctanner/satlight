@@ -44,6 +44,7 @@ import hashlib
 import urllib
 import optparse
 from collections import namedtuple
+import time
 
 class SecureXMLRPCServer(BaseHTTPServer.HTTPServer, SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
     #request_queue_size = 256
